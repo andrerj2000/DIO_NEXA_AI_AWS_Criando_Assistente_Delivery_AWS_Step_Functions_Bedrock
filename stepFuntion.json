@@ -1,0 +1,51 @@
+{
+    "Comment": "State machine for suggesting a romantic dinner plan using AI Bedrock with the Haku model",
+    "StartAt": "SuggestBeverage",
+    "States": {
+      "SuggestBeverage": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::bedrock:startModel",
+        "Parameters": {
+          "ModelArn": "arn:aws:bedrock:REGION:ACCOUNT_ID:model/haku",
+          "Input": {
+            "prompt": "Sugira uma bebida para um momento romântico."
+          }
+        },
+        "Next": "SuggestDinner"
+      },
+      "SuggestDinner": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::bedrock:startModel",
+        "Parameters": {
+          "ModelArn": "arn:aws:bedrock:REGION:ACCOUNT_ID:model/haku",
+          "Input": {
+            "prompt": "Sugira um jantar que combine com a bebida para o mesmo jantar romântico."
+          },
+          "PreviousResult.$": "$.SuggestBeverage.Result"
+        },
+        "Next": "SuggestLocation"
+      },
+      "SuggestLocation": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::bedrock:startModel",
+        "Parameters": {
+          "ModelArn": "arn:aws:bedrock:REGION:ACCOUNT_ID:model/haku",
+          "Input": {
+            "prompt": "Sugira um lugar para esse jantar romântico no estado do Rio de Janeiro."
+          },
+          "PreviousResult.$": "$.SuggestDinner.Result"
+        },
+        "Next": "FormatOutput"
+      },
+      "FormatOutput": {
+        "Type": "Pass",
+        "Result": {
+          "Beverage": "$.SuggestBeverage.Result",
+          "Dinner": "$.SuggestDinner.Result",
+          "Location": "$.SuggestLocation.Result"
+        },
+        "End": true
+      }
+    }
+  }
+  
